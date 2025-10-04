@@ -1,0 +1,23 @@
+# Ignore all files ending with .log
+*.log
+
+# Ignore the 'temp/' directory and its contents
+temp/
+
+# Ignore a specific file named 'config.local.js'
+config.local.js
+
+# Ignore all files in the 'build/' directory
+build/
+
+# Ignore Node.js specific files and directories
+node_modules/
+npm-debug.log
+.env
+
+# Ignore Python specific files and directories
+__pycache__/
+*.pyc
+
+# Ignore macOS specific files
+.DS_Store
