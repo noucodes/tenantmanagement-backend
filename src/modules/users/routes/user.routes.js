@@ -1,3 +1,4 @@
+// src/modules/users/routes/user.routes.js
 const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/user.controller");
@@ -15,5 +16,3 @@ router.post("/login", userController.loginUser);
 // router.get("/:id", authMiddleware, userController.getUser);
 
 module.exports = router;
-
-// Gikapoy nakuuuu

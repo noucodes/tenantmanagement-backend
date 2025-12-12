@@ -1,3 +1,4 @@
+// src/modules/users/models/user.model.js
 const pool = require("../../../config/db");
 
 // Create table if not exists
@@ -15,5 +16,5 @@ async function initUserTable() {
 }
 
 module.exports = {
-  initUserTable
+  initUserTable,
 };

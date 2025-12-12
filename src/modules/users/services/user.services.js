@@ -1,3 +1,4 @@
+// src/modules/users/services/user.services.js
 const pool = require("../../../config/db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -21,21 +22,12 @@ class UserServices {
         throw new Error("Email already registered");
       }
 
-      // Check if employeeId already exists
-      const checkUserId = await pool.query(
-        "SELECT * FROM users WHERE employee_id = $1",
-        [employeeId]
-      );
-      if (checkUserId.rows.length > 0) {
-        throw new Error("Employee ID already registered");
-      }
-
       // Hash password
       const hashedPassword = await bcrypt.hash(password, this.saltRounds);
 
       const result = await pool.query(
-        "INSERT INTO users (first_name, last_name, email, password, role, employee_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
-        [first_name, last_name, email, hashedPassword, role, employeeId]
+        "INSERT INTO users (first_name, last_name, email, password, role) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+        [first_name, last_name, email, hashedPassword, role]
       );
 
       return { message: "✅ Registered successfully", user: result.rows[0] };
@@ -49,7 +41,7 @@ class UserServices {
     try {
       const { email, password } = data; // Use a single field for flexibility
 
-      // Find user by email or employee_id
+      // Find user by email
       const result = await pool.query("SELECT * FROM users WHERE email = $1", [
         email,
       ]);
@@ -109,14 +101,17 @@ class UserServices {
         [user.id]
       );
 
+      const fullName = [user.first_name, user.last_name]
+        .filter(Boolean)
+        .join(" ");
+
       // Generate JWT
       const token = jwt.sign(
         {
           id: user.id,
           role: user.role,
           email: user.email,
-          name: user.name,
-          employeeId: user.employee_id,
+          name: fullName,
         },
         process.env.JWT_SECRET,
         { expiresIn: "1h" }

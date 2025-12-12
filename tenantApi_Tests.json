@@ -1,0 +1,576 @@
+{
+  "info": {
+    "_postman_id": "final-green-test",
+    "name": "Tenant System - Final Fixes",
+    "description": "Full coverage with corrected payloads for PUT and Payment.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// GLOBAL SUCCESS CHECK",
+          "if (pm.response.headers.get('Content-Type') && pm.response.headers.get('Content-Type').includes('application/json')) {",
+          "    pm.test(`[${pm.info.requestName}] Status is 200/201`, function () {",
+          "        pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+          "    });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.set(\"admin_email\", `admin${Math.floor(Math.random() * 100000)}@test.com`);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Admin\",\n  \"last_name\": \"User\",\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": "{{baseUrl}}/users/register"
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set(\"authToken\", jsonData.token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": "{{baseUrl}}/users/login"
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{authToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Creation (Setup)",
+      "item": [
+        {
+          "name": "Create Property",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "var id = jsonData.property ? jsonData.property.id : jsonData.id;",
+                  "pm.environment.set(\"property_id\", id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{authToken}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sunset Apartments\",\n  \"address\": \"123 Main St\",\n  \"city\": \"NYC\",\n  \"state\": \"NY\",\n  \"zip_code\": \"10001\",\n  \"property_type\": \"apartment\",\n  \"total_units\": 20,\n  \"status\": \"active\"\n}"
+            },
+            "url": "{{baseUrl}}/properties"
+          }
+        },
+        {
+          "name": "Create Unit",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "var id = jsonData.unit ? jsonData.unit.id : jsonData.id;",
+                  "pm.environment.set(\"unit_id\", id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{authToken}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_id\": \"{{property_id}}\",\n  \"unit_number\": \"101\",\n  \"floor\": 1,\n  \"bedrooms\": 2,\n  \"rent_amount\": 1500,\n  \"status\": \"vacant\"\n}"
+            },
+            "url": "{{baseUrl}}/units"
+          }
+        },
+        {
+          "name": "Create Tenant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "var id = jsonData.tenant ? jsonData.tenant.id : jsonData.id;",
+                  "pm.environment.set(\"tenant_id\", id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{authToken}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Jane\",\n  \"last_name\": \"Smith\",\n  \"email\": \"jane{{$randomInt}}@test.com\",\n  \"password\": \"password123\",\n  \"phone\": \"555-1234\",\n  \"status\": \"active\"\n}"
+            },
+            "url": "{{baseUrl}}/tenants"
+          }
+        },
+        {
+          "name": "Create Lease",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "var id = jsonData.lease ? jsonData.lease.id : jsonData.id;",
+                  "pm.environment.set(\"lease_id\", id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{authToken}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"{{tenant_id}}\",\n  \"unit_id\": \"{{unit_id}}\",\n  \"start_date\": \"2024-01-01\",\n  \"end_date\": \"2024-12-31\",\n  \"rent_amount\": 1500,\n  \"status\": \"active\"\n}"
+            },
+            "url": "{{baseUrl}}/leases"
+          }
+        },
+        {
+          "name": "Create Payment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "var id = jsonData.payment ? jsonData.payment.id : jsonData.id;",
+                  "pm.environment.set(\"payment_id\", id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{authToken}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lease_id\": \"{{lease_id}}\",\n  \"amount\": 1500,\n  \"payment_date\": \"2024-01-01\",\n  \"due_date\": \"2024-01-01\",\n  \"payment_method\": \"bank_transfer\",\n  \"transaction_id\": \"TXN{{$randomInt}}\",\n  \"status\": \"completed\"\n}"
+            },
+            "url": "{{baseUrl}}/payments"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Read & Verify (GET)",
+      "item": [
+        {
+          "name": "Properties: Get All",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{authToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/properties"
+          }
+        },
+        {
+          "name": "Properties: Get One",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{authToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/properties/{{property_id}}"
+          }
+        },
+        {
+          "name": "Properties: Get Units",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{authToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/properties/{{property_id}}/units"
+          }
+        },
+        {
+          "name": "Units: Get All",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{authToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/units"
+          }
+        },
+        {
+          "name": "Units: Filter Vacant",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{authToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/units?vacant=true"
+          }
+        },
+        {
+          "name": "Units: Get One",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{authToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/units/{{unit_id}}"
+          }
+        },
+        {
+          "name": "Tenants: Get All",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{authToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/tenants"
+          }
+        },
+        {
+          "name": "Tenants: Get One",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{authToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/tenants/{{tenant_id}}"
+          }
+        },
+        {
+          "name": "Leases: Get All",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{authToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/leases"
+          }
+        },
+        {
+          "name": "Leases: Get One",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{authToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/leases/{{lease_id}}"
+          }
+        },
+        {
+          "name": "Payments: Get All",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{authToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/payments"
+          }
+        },
+        {
+          "name": "Payments: Get Statistics",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{authToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/payments/stats"
+          }
+        },
+        {
+          "name": "Dashboard: Admin",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{authToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/dashboard/admin"
+          }
+        },
+        {
+          "name": "Reports: Revenue",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{authToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/reports/revenue?startDate=2024-01-01&endDate=2024-12-31"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Updates (PUT)",
+      "item": [
+        {
+          "name": "Update Property",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{authToken}}", "type": "string" }
+              ]
+            },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sunset Apartments Updated\",\n  \"address\": \"123 Main St\",\n  \"city\": \"NYC\",\n  \"state\": \"NY\",\n  \"zip_code\": \"10001\",\n  \"property_type\": \"apartment\",\n  \"total_units\": 20,\n  \"status\": \"active\"\n}"
+            },
+            "url": "{{baseUrl}}/properties/{{property_id}}"
+          }
+        },
+        {
+          "name": "Update Unit",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{authToken}}", "type": "string" }
+              ]
+            },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_id\": \"{{property_id}}\",\n  \"unit_number\": \"101\",\n  \"floor\": 1,\n  \"bedrooms\": 2,\n  \"rent_amount\": 1500,\n  \"status\": \"occupied\"\n}"
+            },
+            "url": "{{baseUrl}}/units/{{unit_id}}"
+          }
+        },
+        {
+          "name": "Update Tenant",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{authToken}}", "type": "string" }
+              ]
+            },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Jane\",\n  \"last_name\": \"Smith\",\n  \"email\": \"jane{{$randomInt}}@test.com\",\n  \"password\": \"password123\",\n  \"phone\": \"555-9999\",\n  \"status\": \"active\"\n}"
+            },
+            "url": "{{baseUrl}}/tenants/{{tenant_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Cleanup (DELETE)",
+      "item": [
+        {
+          "name": "Delete Payment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{authToken}}", "type": "string" }
+              ]
+            },
+            "method": "DELETE",
+            "url": "{{baseUrl}}/payments/{{payment_id}}"
+          }
+        },
+        {
+          "name": "Delete Lease",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{authToken}}", "type": "string" }
+              ]
+            },
+            "method": "DELETE",
+            "url": "{{baseUrl}}/leases/{{lease_id}}"
+          }
+        },
+        {
+          "name": "Delete Tenant",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{authToken}}", "type": "string" }
+              ]
+            },
+            "method": "DELETE",
+            "url": "{{baseUrl}}/tenants/{{tenant_id}}"
+          }
+        },
+        {
+          "name": "Delete Unit",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{authToken}}", "type": "string" }
+              ]
+            },
+            "method": "DELETE",
+            "url": "{{baseUrl}}/units/{{unit_id}}"
+          }
+        },
+        {
+          "name": "Delete Property",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{authToken}}", "type": "string" }
+              ]
+            },
+            "method": "DELETE",
+            "url": "{{baseUrl}}/properties/{{property_id}}"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api",
+      "type": "string"
+    }
+  ]
+}

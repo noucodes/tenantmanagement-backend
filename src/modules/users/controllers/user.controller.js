@@ -1,3 +1,4 @@
+// src/modules/users/controllers/user.controller.js
 const userService = require("../services/user.services");
 
 exports.createUser = async (req, res) => {
